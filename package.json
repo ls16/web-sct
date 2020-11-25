@@ -1,0 +1,16 @@
+{
+  "name": "web-sct",
+  "version": "0.1.0",
+  "description": "WebSocket lib",
+  "main": "index.js",
+  "author": "Sergey Lunev",
+  "license": "MIT",
+  "homepage": "https://github.com/ls16/web-sct",
+  "repository": "https://github.com/ls16/web-sct.git",
+  "scripts": {
+    "test": "node test/"
+  },
+  "dependencies": {
+    "message-reader": "^0.2.0"
+  }
+}
