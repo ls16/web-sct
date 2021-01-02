@@ -303,7 +303,8 @@ class WebSocket extends WebSocketBase {
   _handleConnect(socket) {
     this._secKey = utils.makeSecKey();
     const urlObj = new URL(this._url);
-    socket.write(utils.makeHandshakeRequest(this._secKey, `${urlObj.host}${urlObj.pathname}`));
+    const origin = `${urlObj.pathname}${urlObj.search}${urlObj.hash}`;
+    socket.write(utils.makeHandshakeRequest(this._secKey, origin, urlObj.host));
   }
 }
 

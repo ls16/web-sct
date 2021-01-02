@@ -12,8 +12,8 @@ function makeSecKey() {
   return crypto.randomBytes(16).toString('base64');
 }
 
-function makeHandshakeRequest(secKey, host) {
-  let request = 'GET / HTTP/1.1\r\n';
+function makeHandshakeRequest(secKey, origin, host) {
+  let request = `GET ${origin} HTTP/1.1\r\n`;
   const headers = {
     'Host': host,
     'Upgrade': 'websocket',
