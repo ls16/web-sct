@@ -81,6 +81,16 @@ test('WS open event', async () => {
   await testEvent('open', () => {});
 });
 
+test('WS message event (data is empty string)', async () => {
+  await testEvent('open', async (client) => {
+    const message = '';
+    client.send(message);
+    await testEvent('message', (client, evt) => {
+      assert.strictEqual(evt.data, message + message);
+    }, client);
+  });
+});
+
 test('WS message event (short length data)', async () => {
   await testEvent('open', async (client) => {
     const message = 'hello';

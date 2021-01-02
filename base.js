@@ -155,7 +155,7 @@ class WebSocketBase extends EventEmitter {
   }
 
   send(data) {
-    if (data == null || data === '') throw new Error('No data to sent');
+    if (data == null) throw new Error('No data to sent');
     if (this._state != OPEN) throw new Error('InvalidStateError');
     const len = +data.length;
     this._bufferedAmount += len;
