@@ -103,7 +103,7 @@ function makeFrame(data, options = {}) {
   const len = data != null ? data.length : 0;
   if (len <= 125) {
     frameBytes.push(options.masking ? (0x80 | len) : len);
-  } else if (len < 0xFFFF) {
+  } else if (len <= 0xFFFF) {
     frameBytes.push(options.masking ? (0x80 | 126) : 126);
     frameBytes.push(len >>> 8);
     frameBytes.push(len & 0xFF);
