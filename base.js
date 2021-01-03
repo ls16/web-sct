@@ -232,7 +232,11 @@ class WebSocket extends WebSocketBase {
     const client = masterClientInstance.clone();
     client
       .use((ctx, next) => {
-        this._processMessage(ctx);
+        try {
+          this._processMessage(ctx);
+        } catch (err) {
+          console.log(err);
+        }
       })
       .handler('connection', (socket) => {
         this._handleConnect(socket);
@@ -374,7 +378,11 @@ class WebSocketServer extends EventEmitter {
     const server = masterServerInstance.clone();
     server
       .use((ctx, next) => {
-        ctx.connection.webSocket._processMessage(ctx);
+        try {
+          ctx.connection.webSocket._processMessage(ctx);
+        } catch (err) {
+          console.log(err);
+        }
       })
       .handler('listening', (socket) => {
         this.emit('listening');
