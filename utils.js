@@ -8,6 +8,20 @@ const CLOSE = 0x8;
 const PING = 0x9;
 const PONG = 0xA;
 
+// Close event codes
+const CLOSE_CODES = {
+  PROTOCOL_ERROR: 1002
+};
+
+class CloseError extends Error {
+  constructor(code, message) {
+    super(message);
+
+    this.code = code;
+    this.name = 'CloseError';
+  }
+}
+
 function makeSecKey() {
   return crypto.randomBytes(16).toString('base64');
 }
@@ -76,8 +90,23 @@ function validateServerResponse(secKey, ctx) {
 }
 
 function validatePongData(pongData, pingData) {
+  if (pongData.length > 125) {
+    throw new CloseError(CLOSE_CODES.PROTOCOL_ERROR, 'Too long pong data');
+  }
   if (pongData.compare(pingData) != 0) {
-    throw new Error('Invalid pong data');
+    throw new CloseError(CLOSE_CODES.PROTOCOL_ERROR, 'Invalid pong data');
+  }
+}
+
+function validateFrame(opcode, data) {
+  switch (opcode) {
+    case PING:
+    case PONG:
+    case CLOSE:
+      if (data.length > 125) {
+        throw new CloseError(CLOSE_CODES.PROTOCOL_ERROR, 'Too long control frame data');
+      }
+      break;
   }
 }
 
@@ -99,6 +128,8 @@ function makeFrame(data, options = {}) {
   data = Buffer.from(data);
   const fin = options.fin == null ? true : options.fin;
   const frameBytes = [ fin ? (0x80 | opcode) : opcode];
+
+  validateFrame(opcode, data);
 
   const len = data != null ? data.length : 0;
   if (len <= 125) {
@@ -154,6 +185,8 @@ module.exports = {
   CLOSE,
   PING,
   PONG,
+  CLOSE_CODES,
+  CloseError,
   makeSecKey,
   makeHandshakeRequest,
   makeAcceptResponse,

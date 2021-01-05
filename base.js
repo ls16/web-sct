@@ -167,16 +167,9 @@ class WebSocketBase extends EventEmitter {
     });
   }
 
-  close(code = null, reason = null) {
-    if (code !== null) {
-      validateCloseCode(code);
-    }
-    if (reason !== null) {
-      validateCloseReason(reason);
-    }
-
+  _internalClose(code = null, reason = null) {
     if (this._state == CLOSING || this._state == CLOSED) return;
-
+  
     const options = {
       opcode: utils.CLOSE,
       masking: this instanceof WebSocketConnection ? false : true
@@ -193,6 +186,17 @@ class WebSocketBase extends EventEmitter {
     }
     this._changeState(CLOSING, data);
     utils.sendFrame(this._socket, data, options);
+  }
+ 
+  close(code = null, reason = null) {
+    if (code !== null) {
+      validateCloseCode(code);
+    }
+    if (reason !== null) {
+      validateCloseReason(reason);
+    }
+
+    this._internalClose(code, reason);
   }
 }
 
@@ -235,7 +239,11 @@ class WebSocket extends WebSocketBase {
         try {
           this._processMessage(ctx);
         } catch (err) {
-          console.log(err);
+          if (err.name == 'CloseError') {
+            this._internalClose(err.code, err.message);
+          } else {
+            console.log(err);
+          }
         }
       })
       .handler('connection', (socket) => {
@@ -378,10 +386,15 @@ class WebSocketServer extends EventEmitter {
     const server = masterServerInstance.clone();
     server
       .use((ctx, next) => {
+        const ws = ctx.connection.webSocket;
         try {
-          ctx.connection.webSocket._processMessage(ctx);
+          ws._processMessage(ctx);
         } catch (err) {
-          console.log(err);
+          if (err.name == 'CloseError') {
+            ws._internalClose(err.code, err.message);
+          } else {
+            console.log(err);
+          }
         }
       })
       .handler('listening', (socket) => {
