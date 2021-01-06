@@ -1,5 +1,5 @@
 const {hash} = require('message-reader');
-const {TEXT, maskingData} = require('./utils');
+const {TEXT, maskingData, CloseError, CLOSE_CODES} = require('./utils');
 
 const frame = hash('frame');
 const payload_len_16_1 = hash('payload_len_16_1');
@@ -169,7 +169,12 @@ function doFrame() {
 
 function onAfterParse() {
   if (this.opcode == TEXT) {
-    this.data = this.data.toString();
+    try {
+      const td = new TextDecoder('utf8', {fatal: true});
+      this.data = td.decode(this.data);
+    } catch (err) {
+      throw new CloseError(CLOSE_CODES.INVALID_FRAME_PAYLOAD_DATA, err.message);
+    }
   }
 }
 
