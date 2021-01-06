@@ -10,7 +10,13 @@ const PONG = 0xA;
 
 // Close event codes
 const CLOSE_CODES = {
-  PROTOCOL_ERROR: 1002
+  NORMAL_CLOSURE: 1000,
+  PROTOCOL_ERROR: 1002,
+  CODE_1004: 1004,
+  NO_STATUS_RECEIVED: 1005,
+  ABNORMAL_CLOSURE: 1006,
+  BAD_GATEWAY: 1014,
+  TLS_HANDSHAKE: 1015
 };
 
 class CloseError extends Error {

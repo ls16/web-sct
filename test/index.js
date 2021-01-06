@@ -2,6 +2,7 @@ const assert = require('assert');
 const fs = require('fs');
 const {test, run} = require('./func');
 const {CONNECTING, OPEN, CLOSING, CLOSED, WebSocket, WebSocketServer} = require('../index');
+const {CLOSE_CODES} = require('../utils');
 
 function randomInt(min, max) {
   return min + Math.floor(Math.random() * Math.floor(max - min));
@@ -146,7 +147,7 @@ test('Too long data length', async () => {
 });
 
 test('WS close event', async () => {
-  const code = 1000;
+  const code = CLOSE_CODES.NORMAL_CLOSURE;
   const reason = 'message reason';
   await testEvent('open', async (client) => {
     client.close(code, reason);

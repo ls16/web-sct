@@ -10,7 +10,11 @@ const OPEN = 1;
 const CLOSING = 2;
 const CLOSED = 3;
 
+const CLOSE_CODES = utils.CLOSE_CODES;
+
 const DEF_MAX_DATA_LENGTH = 1024 * 1024;
+
+const CloseError = utils.CloseError;
 
 const masterClientInstance = build([{
   regexp: httpGrammar.regexp,
@@ -39,8 +43,21 @@ function getArrayBuffer(buf) {
 }
 
 function validateCloseCode(code) {
-  if (!(code === 1000 || (code >= 3000 && code <= 4999))) {
-    throw new Error('InvalidAccessError');
+  const codes1 = [
+    CLOSE_CODES.CODE_1004,
+    CLOSE_CODES.NO_STATUS_RECEIVED,
+    CLOSE_CODES.ABNORMAL_CLOSURE,
+    CLOSE_CODES.BAD_GATEWAY,
+    CLOSE_CODES.TLS_HANDSHAKE
+  ];
+  if (code < CLOSE_CODES.NORMAL_CLOSURE ||
+    codes1.indexOf(code) != -1 ||
+    (code >= 1016 && code <= 2999)
+    ) {
+    throw new CloseError(CLOSE_CODES.PROTOCOL_ERROR, 'InvalidAccessError');
+  }
+  if (!(code === CLOSE_CODES.NORMAL_CLOSURE || (code >= 3000 && code <= 4999))) {
+    throw new CloseError(code, 'InvalidAccessError');
   }
 }
 
@@ -102,7 +119,7 @@ class WebSocketBase extends EventEmitter {
   }
 
   _handleClose(hadError) {
-    let code = 1000;
+    let code = CLOSE_CODES.NORMAL_CLOSURE;
     let reason = '';
     if (hadError) {
       code = -1;
