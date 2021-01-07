@@ -1,5 +1,5 @@
 const {hash} = require('message-reader');
-const {TEXT, maskingData, CloseError, CLOSE_CODES} = require('./utils');
+const {CONT, TEXT, PING, PONG, CLOSE, maskingData, CloseError, CLOSE_CODES, BINARY} = require('./utils');
 
 const fin_opcode = hash('fin_opcode');
 const payload_len_16_1 = hash('payload_len_16_1');
@@ -64,8 +64,35 @@ function doTknData(tknName, tknData, end) {
   }
 }
 
+function validateFrame(octet) {
+  const opcode = octet & 0x7F;
+  const isZeroReserved = (octet & 0x70) == 0;
+  const isFin = (octet & 0x80) == 0x80;
+  const validOpcodes = [CONT, TEXT, BINARY, PING, PONG, CLOSE];
+  if (validOpcodes.indexOf(opcode) == -1) {
+    throw new CloseError(CLOSE_CODES.GOING_AWAY, 'Invalid or reserved opcode');
+  }
+  if (opcode == PING || opcode == PONG || opcode == CLOSE) {
+    if (!isFin) {
+      throw new CloseError(CLOSE_CODES.GOING_AWAY, 'FIN bit must be set in the control frame');
+    }
+  }
+  if (!isZeroReserved) {
+    throw new CloseError(CLOSE_CODES.GOING_AWAY, 'Reserved bits must be 0');
+  }
+  if (this.opcode && opcode != PING) {
+    if (opcode != CONT) {
+      throw new CloseError(CLOSE_CODES.GOING_AWAY, 'Invalid opcode');
+    }
+  }
+  if (!this.opcode && opcode == CONT) {
+    throw new CloseError(CLOSE_CODES.GOING_AWAY, 'Invalid frame continuation');
+  }
+}
+
 function doReadOpcode(get, lookup, push_after, set_name_from_hash) {
   const octet = get(0)[0];
+  this.validateFrame(octet);
   const opcode = octet & 0x7F;
   this.isFin = (octet & 0x80) == 0x80;
   !this.opcode && (this.opcode = opcode);
@@ -191,6 +218,7 @@ module.exports = {
   regexp,
   maskedGrammar,
   nonMaskedGrammar,
+  validateFrame,
   onAfterParse,
   onTknData: doTknData,
   doReadOpcode,
