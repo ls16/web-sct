@@ -6,6 +6,8 @@ const payload_len_16_1 = hash('payload_len_16_1');
 const payload_len_63_1 = hash('payload_len_63_1');
 const masking_key_data = hash('masking_key_data');
 
+const tooBigMsg = 'Message is too big';
+
 const regexp = `
   octet [\\x00-\\xFF]
 `;
@@ -58,7 +60,7 @@ function doTknData(tknName, tknData, end) {
   }
 
   if (this.frameData.length > this.connection.maxDataLength) {
-    throw new Error('Data length is too long');
+    throw new CloseError(CLOSE_CODES.MESSAGE_TOO_BIG, tooBigMsg);
   }
 }
 
@@ -170,7 +172,7 @@ function doFrame() {
   }
 
   if (this.data.length > this.connection.maxDataLength) {
-    throw new Error('Data length is too long');
+    throw new CloseError(CLOSE_CODES.MESSAGE_TOO_BIG, tooBigMsg);
   }
 }
 

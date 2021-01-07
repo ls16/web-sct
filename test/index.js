@@ -135,13 +135,16 @@ test('Too long data length', async () => {
     const count = 1050 * 1024;
     const message = Buffer.alloc(count, 'A');
     client.send(message);
+    let isException;
     try {
       await testEvent('message', (client, evt) => {
-        assert.strictEqual(evt.data, message + message);
       }, client);
-      throw new Error('Test failed');
+      isException = false;
     } catch (err) {
-      //all ok;
+      isException = true;
+    }
+    if (!isException) {
+      throw new Error('Test failed');
     }
   });
 });
