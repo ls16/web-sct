@@ -1,7 +1,7 @@
 const {hash} = require('message-reader');
 const {TEXT, maskingData, CloseError, CLOSE_CODES} = require('./utils');
 
-const frame = hash('frame');
+const fin_opcode = hash('fin_opcode');
 const payload_len_16_1 = hash('payload_len_16_1');
 const payload_len_63_1 = hash('payload_len_63_1');
 const masking_key_data = hash('masking_key_data');
@@ -17,14 +17,18 @@ const grammar = (isMasked) => {
     start: message;
 
     message: message_1 fin_frame;
-    message_1: message_1 frame {this.doFrame()};
+    message_1: message_1 frame;
     message_1: ;
 
-    fin_frame: frame {this.doFrame(); (!this.isFin && set_name_from_hash(frame))};
+    fin_frame: fin_frame_1 {this.doFrame()};
+    fin_frame_1: fin_opcode payload_len ${maskingKey} 'octet' 'payload_data';
+    fin_frame_1: fin_opcode payload_len 'octet' 'masking_key_data';
+    fin_frame_1: fin_opcode payload_len 'payload_data_zero';
 
-    frame: opcode payload_len ${maskingKey} 'octet' 'payload_data';
-    frame: opcode payload_len 'octet' 'masking_key_data';
-    frame: opcode payload_len 'payload_data_zero';
+    frame: frame_1 {this.doFrame()};
+    frame_1: opcode payload_len ${maskingKey} 'octet' 'payload_data';
+    frame_1: opcode payload_len 'octet' 'masking_key_data';
+    frame_1: opcode payload_len 'payload_data_zero';
 
     masking_key: 'octet' 'octet' 'octet' 'octet' {this.maskingKey = Buffer.concat([get(3), get(2), get(1), get(0)]); this.frameData = Buffer.from(lookup()); this.readPayloadData(push_after)};
 
@@ -33,7 +37,7 @@ const grammar = (isMasked) => {
     payload_len_16: payload_len_16_1 'octet' 'octet' {this.doReadPayloadLen16(get, lookup, push_after)};
     payload_len_8: 'octet' {this.doReadPayloadLen8(get, lookup, set_name_from_hash, push_after)};
 
-    opcode: 'octet' {this.doReadOpcode(get, lookup, push_after)};
+    opcode: 'octet' {this.doReadOpcode(get, lookup, push_after, set_name_from_hash)};
   `;
 };
 
@@ -58,7 +62,7 @@ function doTknData(tknName, tknData, end) {
   }
 }
 
-function doReadOpcode(get, lookup, push_after) {
+function doReadOpcode(get, lookup, push_after, set_name_from_hash) {
   const octet = get(0)[0];
   const opcode = octet & 0x7F;
   this.isFin = (octet & 0x80) == 0x80;
@@ -67,6 +71,9 @@ function doReadOpcode(get, lookup, push_after) {
   this.isMasked = (lookupOctet & 0x80) == 0x80;
   if (lookupOctet == 0) {
     push_after('', 'payload_data_zero');
+  }
+  if (this.isFin) {
+    set_name_from_hash(fin_opcode);
   }
 }
 
@@ -86,7 +93,7 @@ function doReadPayloadLen8(get, lookup, set_name_from_hash, push_after) {
         switch (len) {
           case 0:
             this.frameData = Buffer.from([]);
-            push_after('');
+            this.isFin && push_after('');
             break;
           case 1:
             this.frameData = Buffer.from(lookup());
