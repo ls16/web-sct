@@ -132,7 +132,7 @@ test('WS message event (63-bit length data)', async () => {
 
 test('Too long data length', async () => {
   await testEvent('open', async (client) => {
-    const count = 1050 * 1024;
+    const count = 20 * 1050 * 1024;
     const message = Buffer.alloc(count, 'A');
     client.send(message);
     let isException;

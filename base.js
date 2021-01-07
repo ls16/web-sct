@@ -12,7 +12,7 @@ const CLOSED = 3;
 
 const CLOSE_CODES = utils.CLOSE_CODES;
 
-const DEF_MAX_DATA_LENGTH = 1024 * 1024;
+const DEF_MAX_DATA_LENGTH = 20 * 1024 * 1024;
 
 const CloseError = utils.CloseError;
 
