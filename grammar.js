@@ -96,12 +96,17 @@ function doReadOpcode(get, lookup, push_after, set_name_from_hash) {
   const opcode = octet & 0x7F;
   this.isFin = (octet & 0x80) == 0x80;
   !this.opcode && (this.opcode = opcode);
+  this.isBtnPing = this.opcode != opcode && opcode == PING;
+  if (this.isBtnPing) {
+    this.dataCopy = this.data ? this.data : null;
+    this.data = null;
+  }
   const lookupOctet = lookup()[0];
   this.isMasked = (lookupOctet & 0x80) == 0x80;
   if (lookupOctet == 0) {
     push_after('', 'payload_data_zero');
   }
-  if (this.isFin) {
+  if (this.isFin && !this.isBtnPing) {
     set_name_from_hash(fin_opcode);
   }
 }
@@ -122,7 +127,7 @@ function doReadPayloadLen8(get, lookup, set_name_from_hash, push_after) {
         switch (len) {
           case 0:
             this.frameData = Buffer.from([]);
-            this.isFin && push_after('');
+            (this.isFin && !this.isBtnPing) && push_after('');
             break;
           case 1:
             this.frameData = Buffer.from(lookup());
@@ -182,7 +187,7 @@ function readPayloadData(push_after) {
   } else {
     push_after('', 'payload_data');
   }
-  if (this.isFin) {
+  if (this.isFin && !this.isBtnPing) {
     size > 1 ? push_after('payload_data') : push_after('');
   }
 }
@@ -200,6 +205,11 @@ function doFrame() {
 
   if (this.data.length > this.connection.maxDataLength) {
     throw new CloseError(CLOSE_CODES.MESSAGE_TOO_BIG, tooBigMsg);
+  }
+
+  if (this.isBtnPing) {
+    this.connection.webSocket._pong(this.data);
+    this.data = this.dataCopy;
   }
 }
 

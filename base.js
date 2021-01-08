@@ -265,7 +265,7 @@ class WebSocket extends WebSocketBase {
       })
       .handler('connection', (socket) => {
         this._handleConnect(socket);
-        return {maxDataLength};
+        return {webSocket: this, maxDataLength};
       })
       .handler('errorConnection', (conn, err) => {
         this._handleError(err);
