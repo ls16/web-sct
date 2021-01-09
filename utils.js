@@ -180,7 +180,15 @@ function maskingData(data, maskingKey) {
 
 function getCloseParams(data) {
   const code = data != null && data.length > 0 ? data.readUInt16BE() : 0;
-  const reason = data != null  && data.length > 0 ? data.slice(2).toString() : '';
+  let reason = '';
+  try {
+    if (data != null && data.length > 0) {
+      const td = new TextDecoder('utf8', {fatal: true});
+      reason = td.decode(data.slice(2));
+    }
+  } catch (err) {
+    throw new CloseError(CLOSE_CODES.INVALID_FRAME_PAYLOAD_DATA, err.message);
+  }
   return {
     code,
     reason
