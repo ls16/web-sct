@@ -81,7 +81,7 @@ function validateFrame(octet) {
     throw new CloseError(CLOSE_CODES.GOING_AWAY, 'Reserved bits must be 0');
   }
   if (this.opcode && opcode != PING) {
-    if (opcode != CONT) {
+    if (opcode != CONT && opcode != CLOSE) {
       throw new CloseError(CLOSE_CODES.GOING_AWAY, 'Invalid opcode');
     }
   }
@@ -96,6 +96,7 @@ function doReadOpcode(get, lookup, push_after, set_name_from_hash) {
   const opcode = octet & 0x7F;
   this.isFin = (octet & 0x80) == 0x80;
   !this.opcode && (this.opcode = opcode);
+  !this.isBtnClose && (this.isBtnClose = this.opcode != opcode && opcode == CLOSE);
   this.isBtnPing = this.opcode != opcode && opcode == PING;
   if (this.isBtnPing) {
     this.dataCopy = this.data ? this.data : null;
@@ -106,7 +107,7 @@ function doReadOpcode(get, lookup, push_after, set_name_from_hash) {
   if (lookupOctet == 0) {
     push_after('', 'payload_data_zero');
   }
-  if (this.isFin && !this.isBtnPing) {
+  if (this.isFin && !this.isBtnPing && !this.isBtnClose) {
     set_name_from_hash(fin_opcode);
   }
 }
@@ -127,7 +128,7 @@ function doReadPayloadLen8(get, lookup, set_name_from_hash, push_after) {
         switch (len) {
           case 0:
             this.frameData = Buffer.from([]);
-            (this.isFin && !this.isBtnPing) && push_after('');
+            (this.isFin && !this.isBtnPing && !this.isBtnClose) && push_after('');
             break;
           case 1:
             this.frameData = Buffer.from(lookup());
@@ -187,7 +188,7 @@ function readPayloadData(push_after) {
   } else {
     push_after('', 'payload_data');
   }
-  if (this.isFin && !this.isBtnPing) {
+  if (this.isFin && !this.isBtnPing && !this.isBtnClose) {
     size > 1 ? push_after('payload_data') : push_after('');
   }
 }
@@ -211,9 +212,16 @@ function doFrame() {
     this.connection.webSocket._pong(this.data);
     this.data = this.dataCopy;
   }
+  if (this.isBtnClose) {
+    this.connection.webSocket.close(CLOSE_CODES.NORMAL_CLOSURE);
+  }
 }
 
 function onAfterParse() {
+  if (this.isBtnClose) {
+    this.data = Buffer.from([]);
+    return;
+  }
   if (this.opcode == TEXT) {
     try {
       const td = new TextDecoder('utf8', {fatal: true});
