@@ -66,7 +66,7 @@ function validateCloseReason(reason) {
     ? Buffer.from(reason)
     : reason;
   if (reasonBin.length > 123) {
-    throw new Error('SyntaxError');
+    throw new CloseError(CLOSE_CODES.PROTOCOL_ERROR, 'SyntaxError');
   }
 }
 
