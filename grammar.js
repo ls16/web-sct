@@ -164,7 +164,7 @@ function doReadPayloadLen(push_after) {
   if (this.payloadLen.length == 1 && this.payloadLen[0] == 0) {
     if (this.isMasked) {
       push_after('', 'masking_key_data', null, 3);
-      push_after('masking_key_data');
+      (this.isFin && !this.isBtnPing && !this.isBtnClose) && push_after('masking_key_data');
     }
   }
 }
