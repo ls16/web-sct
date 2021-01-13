@@ -119,6 +119,40 @@ function validateFrame(opcode, data) {
   }
 }
 
+function validateCloseCode(code) {
+  const codes1 = [
+    CLOSE_CODES.CODE_1004,
+    CLOSE_CODES.NO_STATUS_RECEIVED,
+    CLOSE_CODES.ABNORMAL_CLOSURE,
+    CLOSE_CODES.BAD_GATEWAY,
+    CLOSE_CODES.TLS_HANDSHAKE
+  ];
+  if (code < CLOSE_CODES.NORMAL_CLOSURE ||
+    codes1.indexOf(code) != -1 ||
+    (code >= 1016 && code <= 2999)
+    ) {
+    throw new CloseError(CLOSE_CODES.PROTOCOL_ERROR, 'InvalidAccessError');
+  }
+  if (!(code === CLOSE_CODES.NORMAL_CLOSURE || (code >= 3000 && code <= 4999))) {
+    throw new CloseError(code, 'InvalidAccessError');
+  }
+}
+
+function validateRecCloseCode(code) {
+  if (code > 4999) {
+    throw new CloseError(CLOSE_CODES.PROTOCOL_ERROR, 'Invalid close code');
+  }
+}
+
+function validateCloseReason(reason) {
+  const reasonBin = typeof(reason) == 'string'
+    ? Buffer.from(reason)
+    : reason;
+  if (reasonBin.length > 123) {
+    throw new CloseError(CLOSE_CODES.PROTOCOL_ERROR, 'SyntaxError');
+  }
+}
+
 /**
  * @typedef {Object} MakeFrameOptions
  * @property {Number} [opcode]
@@ -179,15 +213,18 @@ function maskingData(data, maskingKey) {
 }
 
 function getCloseParams(data) {
-  const code = data != null && data.length > 0 ? data.readUInt16BE() : 0;
+  let code = 0;
   let reason = '';
   try {
     if (data != null && data.length > 0) {
+      code = data.readUInt16BE();
+      validateRecCloseCode(code);
       const td = new TextDecoder('utf8', {fatal: true});
       reason = td.decode(data.slice(2));
+      validateCloseReason(reason);
     }
   } catch (err) {
-    throw new CloseError(CLOSE_CODES.INVALID_FRAME_PAYLOAD_DATA, err.message);
+    throw new CloseError(CLOSE_CODES.PROTOCOL_ERROR, err.message);
   }
   return {
     code,
@@ -209,6 +246,8 @@ module.exports = {
   makeAcceptResponse,
   validateServerResponse,
   validatePongData,
+  validateCloseCode,
+  validateCloseReason,
   sendFrame,
   maskingData,
   getCloseParams

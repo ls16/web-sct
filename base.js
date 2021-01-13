@@ -42,34 +42,6 @@ function getArrayBuffer(buf) {
     : buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.length);
 }
 
-function validateCloseCode(code) {
-  const codes1 = [
-    CLOSE_CODES.CODE_1004,
-    CLOSE_CODES.NO_STATUS_RECEIVED,
-    CLOSE_CODES.ABNORMAL_CLOSURE,
-    CLOSE_CODES.BAD_GATEWAY,
-    CLOSE_CODES.TLS_HANDSHAKE
-  ];
-  if (code < CLOSE_CODES.NORMAL_CLOSURE ||
-    codes1.indexOf(code) != -1 ||
-    (code >= 1016 && code <= 2999)
-    ) {
-    throw new CloseError(CLOSE_CODES.PROTOCOL_ERROR, 'InvalidAccessError');
-  }
-  if (!(code === CLOSE_CODES.NORMAL_CLOSURE || (code >= 3000 && code <= 4999))) {
-    throw new CloseError(code, 'InvalidAccessError');
-  }
-}
-
-function validateCloseReason(reason) {
-  const reasonBin = typeof(reason) == 'string'
-    ? Buffer.from(reason)
-    : reason;
-  if (reasonBin.length > 123) {
-    throw new CloseError(CLOSE_CODES.PROTOCOL_ERROR, 'SyntaxError');
-  }
-}
-
 class WebSocketBase extends EventEmitter {
   _socket = null;
   _state = -1;
@@ -210,10 +182,10 @@ class WebSocketBase extends EventEmitter {
  
   close(code = null, reason = null) {
     if (code !== null) {
-      validateCloseCode(code);
+      utils.validateCloseCode(code);
     }
     if (reason !== null) {
-      validateCloseReason(reason);
+      utils.validateCloseReason(reason);
     }
 
     this._internalClose(code, reason);
