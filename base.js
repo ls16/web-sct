@@ -203,6 +203,9 @@ class WebSocketBase extends EventEmitter {
     }
     this._changeState(CLOSING, data);
     utils.sendFrame(this._socket, data, options);
+    if (this instanceof WebSocketConnection) {
+      this._socket.end();
+    }
   }
  
   close(code = null, reason = null) {
