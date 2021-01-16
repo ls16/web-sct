@@ -276,7 +276,9 @@ class WebSocket extends WebSocketBase {
     } else {
       switch (ctx.opcode) {
         case utils.PING:
-          this._pong(ctx.data);
+          if (this._state == OPEN) {
+            this._pong(ctx.data);
+          }
           break;
         case utils.PONG:
           utils.validatePongData(ctx.data, this._pingData);
@@ -328,7 +330,9 @@ class WebSocketConnection extends WebSocketBase {
     } else {
       switch (ctx.opcode) {
         case utils.PING:
-          this._pong(ctx.data);
+          if (this._state == OPEN) {
+            this._pong(ctx.data);
+          }
           break;
         case utils.PONG:
           utils.validatePongData(ctx.data, this._pingData);
