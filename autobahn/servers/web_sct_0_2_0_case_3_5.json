@@ -1,0 +1,98 @@
+{
+   "agent": "web-sct 0.2.0",
+   "behavior": "OK",
+   "behaviorClose": "OK",
+   "case": 32,
+   "closedByMe": false,
+   "createStats": true,
+   "createWirelog": true,
+   "description": "Send small binary message with <b>RSV = 5</b>.",
+   "droppedByMe": false,
+   "duration": 2,
+   "expectation": "The connection is failed immediately, since RSV must be 0.",
+   "expected": {
+      "OK": []
+   },
+   "expectedClose": {
+      "closeCode": [
+         1002
+      ],
+      "closedByMe": false,
+      "requireClean": false
+   },
+   "failedByMe": false,
+   "httpRequest": "GET / HTTP/1.1\r\nUser-Agent: AutobahnTestSuite/0.8.0-0.10.9\r\nHost: 192.168.0.103:5555\r\nUpgrade: WebSocket\r\nConnection: Upgrade\r\nPragma: no-cache\r\nCache-Control: no-cache\r\nSec-WebSocket-Key: z4TSzYSojRo0bCMumZmcOg==\r\nSec-WebSocket-Version: 13\r\n\r\n",
+   "httpResponse": "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: lueJnMi+6hr+uIDp1r+sU7cSqnM=\r\nContent-Length: 0\r\n\r\n",
+   "id": "3.5",
+   "isServer": false,
+   "localCloseCode": null,
+   "localCloseReason": null,
+   "received": [],
+   "remoteCloseCode": null,
+   "remoteCloseReason": null,
+   "reportCompressionRatio": false,
+   "reportTime": false,
+   "result": "Actual events match at least one expected.",
+   "resultClose": "Connection was properly closed",
+   "rxFrameStats": {},
+   "rxOctetStats": {
+      "148": 1
+   },
+   "started": "2021-01-18T16:56:03.515Z",
+   "trafficStats": null,
+   "txFrameStats": {
+      "2": 1
+   },
+   "txOctetStats": {
+      "14": 1,
+      "244": 1
+   },
+   "wasClean": false,
+   "wasCloseHandshakeTimeout": false,
+   "wasNotCleanReason": "peer dropped the TCP connection without previous WebSocket closing handshake",
+   "wasOpenHandshakeTimeout": false,
+   "wasServerConnectionDropTimeout": false,
+   "wirelog": [
+      [
+         "TO",
+         [
+            244,
+            "474554202f20485454502f312e310d0a557365722d4167656e743a204175746f6261686e5465737453756974652f302e382e302d302e31302e390d0a486f7374 ..."
+         ],
+         false
+      ],
+      [
+         "RO",
+         [
+            148,
+            "485454502f312e312031303120537769746368696e672050726f746f636f6c730d0a557067726164653a20776562736f636b65740d0a436f6e6e656374696f6e ..."
+         ]
+      ],
+      [
+         "TF",
+         [
+            8,
+            "0x00fffefdfcfb00ff"
+         ],
+         2,
+         true,
+         5,
+         "74667ec1",
+         null,
+         null,
+         false
+      ],
+      [
+         "TO",
+         [
+            14,
+            "d28874667ec17499803c889d7e3e"
+         ],
+         false
+      ],
+      [
+         "KL",
+         1
+      ]
+   ]
+}
