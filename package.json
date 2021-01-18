@@ -2,6 +2,10 @@
   "name": "web-sct",
   "version": "0.1.0",
   "description": "WebSocket lib",
+  "keywords": [
+    "WebSocket",
+    "RFC-6455"
+  ],
   "main": "index.js",
   "author": "Sergey Lunev",
   "license": "MIT",
